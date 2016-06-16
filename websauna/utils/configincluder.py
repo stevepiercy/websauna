@@ -33,7 +33,7 @@ class IncludeAwareConfigParser(configparser.SafeConfigParser):
 
     Each included file is referred by URL. Currently support protocols are:
 
-    * ``resource:``:  This scheme indicates a Python resource specification. The includes are provided `as Python packages resources <https://pythonhosted.org/setuptools/pkg_resources.html>`_.
+    * ``resource:``:  This scheme indicates a Python resource specification. The includes are provided `as Python packages resources <https://pythonhosted.org/setuptools/pkg_resources.html>`_. **Note: This is a package name, not Python module name**.
 
     The keys in the current INI file sections are added from includes if the keys do not exist yet. Includes are processed from first to last, first taking precedences.
 
@@ -53,9 +53,12 @@ class IncludeAwareConfigParser(configparser.SafeConfigParser):
         package = parts.netloc
         path = parts.path
 
-        assert _resource_manager.resource_exists(package, path), "Could not find {}".format(include_file)
+        # We must resolve the using Requirement explicitly referring to a package (as in pip requirements.txt file), because the default behavior of resource_exists() is to resolve by module. By resolving "websauna" we might end up to websauna namespace module. websauna namespace module points to a random websauna.xxx package, not websauna package itself. Thus we explicitly refer to a packag using this construct.
+        req = pkg_resources.Requirement.parse(package)
 
-        config_source = _resource_manager.resource_stream(package, path)
+        assert _resource_manager.resource_exists(req, path), "Could not find {}".format(include_file)
+
+        config_source = _resource_manager.resource_stream(req, path)
         return config_source
 
     def read_include(self, include_file, fpname):

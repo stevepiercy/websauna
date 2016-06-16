@@ -30,9 +30,12 @@ def resolve(uri):
         package = parts.netloc
         path = parts.path
 
-        assert _resource_manager.resource_exists(package, path), "Could not find {}".format(uri)
+        # We must resolve the using Requirement explicitly referring to a package (as in pip requirements.txt file), because the default behavior of resource_exists() is to resolve by module. By resolving "websauna" we might end up to websauna namespace module. websauna namespace module points to a random websauna.xxx package, not websauna package itself. Thus we explicitly refer to a packag using this construct.
+        req = pkg_resources.Requirement.parse(package)
 
-        config_source = _resource_manager.resource_stream(package, path)
+        assert _resource_manager.resource_exists(req, path), "Could not find {}".format(uri)
+
+        config_source = _resource_manager.resource_stream(req, path)
     else:
         config_source = io.open(parts.path, "rb")
 
