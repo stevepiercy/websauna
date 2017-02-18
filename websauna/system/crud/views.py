@@ -15,6 +15,7 @@ from websauna.compat.typing import Iterable
 from websauna.compat.typing import List
 from websauna.compat.typing import Optional
 from websauna.system.core import messages
+from websauna.system.crud.listing import Filter
 from websauna.system.form import interstitial
 from websauna.system.form.fieldmapper import EditMode
 from websauna.system.form.resourceregistry import ResourceRegistry
@@ -132,7 +133,11 @@ class Listing(CRUDView):
     #: How the result of this list should be split to pages
     paginator = paginator.DefaultPaginator()
 
+    #: Buttons at the top right corner of the page
     resource_buttons = [TraverseLinkButton(id="add", name="Add", view_name="add", permission="add")]
+
+    #: Filter forms that the user can apply for the listing. Renderer at the top of the page.
+    filters = []  #: type: List[Filter]
 
     def __init__(self, context, request):
         """
@@ -174,6 +179,10 @@ class Listing(CRUDView):
         template_context["batch"] = batch
         template_context["count"] = total_items
 
+    def get_filters(self) -> List[Filter]:
+        """Get listing filters available on this view"""
+        return self.filters
+
     @view_config(context=CRUD, name="listing", renderer="crud/listing.html", permission='view')
     def listing(self):
         """View for listing model contents in CRUD."""
@@ -184,7 +193,6 @@ class Listing(CRUDView):
         columns = table.get_columns()
 
         # Some pre-render sanity checks
-
         if not columns:
             raise RuntimeError("CRUD listing doesn't not define any columns: {}".format(self.context))
 

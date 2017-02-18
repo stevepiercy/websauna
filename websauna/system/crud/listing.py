@@ -1,6 +1,15 @@
+from abc import abstractmethod
+
+import colander
+import deform
+from pyramid.renderers import render
+from sqlalchemy.orm import Query
 from websauna.compat.typing import Optional
 from websauna.compat.typing import List
 from websauna.compat.typing import Callable
+from websauna.compat.typing import Tuple
+from websauna.system.form.csrf import CSRFSchema
+from websauna.system.http import Request
 
 
 class Column:
@@ -157,3 +166,94 @@ class Table:
 
     def get_columns(self):
         return self.columns
+
+
+class Filter:
+    """Filter a list based on criteria."""
+
+    #: Template we use to frame the filter form
+    template = "crud/filter.html"
+
+    def __init__(self, **kwargs):
+        """
+        :param kwargs: Passed as is as instance variables
+        """
+        self.__dict__.update(kwargs)
+
+    @abstractmethod
+    def create_form(self, request, filter_context) -> deform.Form:
+        """Create a form that allows set the query parameters."""
+
+    @abstractmethod
+    def apply_on_query(self, query: Query, appstruct: dict) -> Query:
+        """Get a new listing query that has the filters applied."""
+
+    def process_form(self, request, filter_context) -> dict:
+        """Extract incoming HTTP POST from request.
+
+        :raise: deform.ValidationError in the case some of the fields could not be validated
+
+        :return: Colander appstruct dictionary
+        """
+
+    def render(self, request: Request, rendered_form: str, filter_context: dict) -> str:
+        """Render the filter in the listing view.
+
+        The form is put into a filter decoration template.
+
+        :param form: deform.Form object
+
+        :return: HTML code for the output
+        """
+
+        template_content = {
+            "filter_context": filter_context,
+            "rendered_form": rendered_form,
+        }
+
+        html = render(self.template, request=request, context=template_content)
+        return html
+
+    def process(self, request: Request, query: Query, filter_context: dict) -> Tuple[Query, str]:
+        """Process a filter.
+
+        The filter core action method. Render filter on HTML view. Update query object based on filter parameters.
+
+        :param request:
+        :param query:
+        :param filter_context: Extra arguments one can pass around for customized templates, etc.
+        :return: tuple(updated query object,
+        """
+
+        form = self.create_form()
+
+        try:
+            appstruct = self.process_form(filter_context)
+            rendered_form = form.render(appstruct)
+            query = self.apply_on_query(query, appstruct)
+        except deform.ValidationFailure as e:
+            rendered_form = e
+
+        html = self.render(request, rendered_form, filter_context)
+
+        return query, html
+
+
+def process_filters(request: Request, filters: List[Filter], query: Query, filter_context: dict) -> Tuple[Query, List[str]]:
+    """Process all listing filters.
+
+    :param request: HTTP request
+    :param filters: List of filter factories, that take request as argument
+    :param query: SQLAlchemy query
+    :parma filter_context: Extra context passed to the filters
+    :return: (A new query object, List of HTML snippets as string)
+    """
+
+    rendered_filters = []
+    for f in filters:
+        query, html = f.proces(request, query)
+        rendered.append(html)
+
+    return query, rendered_filters
+
+

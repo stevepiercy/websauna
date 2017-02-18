@@ -1,6 +1,12 @@
+from abc import abstractmethod
+
+import colander
+import sqlalchemy
 from pyramid.interfaces import IRequest
 
 from sqlalchemy.orm import Query, Session
+from websauna.system.crud.listing import Filter, Column
+from websauna.system.form.csrf import CSRFSchema
 from websauna.system.http import Request
 from . import CRUD as _CRUD
 from . import Resource as _Resource
@@ -89,3 +95,38 @@ def sqlalchemy_deleter(view: object, context: Resource, request: Request):
     obj = context.get_object()
     dbsession = request.dbsession
     dbsession.delete(obj)
+
+
+class SingleRelationshipValueFilter(Filter):
+    """Choose a ForeignKey to match in the listing using a Select dropdown.
+
+    Filter based on a ORM relationship value.
+    """
+
+    def __init__(self, relationship: sqlalchemy.orm.attributes.InstrumentedAttribute, title: str, **kwargs):
+        """
+        :param column: SQL column we are filtering for
+        :param title: Filter title
+        """
+        super(SingleRelationshipValueFilter, self).__init__(**kwargs)
+        self.relationship = relationship
+        self.title = title
+
+    def get_choices(self):
+        """Populate choices for the relationship choosing.
+
+        By default have
+        """
+
+    def create_schema(self, filter_context: dict):
+        schema = CSRFSchema()
+        node = colander.SchemaNode()
+        schema["value"] = node
+
+    def apply_on_query(self, query: Query, appstruct: dict) -> Query:
+        value = appstruct.get("relation")
+        if value:
+            return query.filter(self.relationship.is_(value))
+        else:
+            # No filtering criteria selected or initial render
+            return query
