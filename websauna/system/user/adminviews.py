@@ -2,10 +2,9 @@
 import colander
 import deform
 from pyramid_layout.panel import panel_config
-
-
 from pyramid.httpexceptions import HTTPFound
 from pyramid.view import view_config
+from sqlalchemy import or_
 
 from websauna.system.admin.utils import get_admin_url_for_sqlalchemy_object
 from websauna.system.core import messages
@@ -22,7 +21,6 @@ from websauna.utils.time import now
 from websauna.system.core.viewconfig import view_overrides
 from websauna.system.crud import listing
 from websauna.system.admin import views as admin_views
-
 from websauna.system.form.fields import JSONValue
 from websauna.system.form.widgets import JSONWidget
 
@@ -61,7 +59,7 @@ class UserListing(admin_views.Listing):
     title = "All users"
 
     table = listing.Table(
-        columns = [
+        columns=[
             listing.Column("id", "Id",),
             listing.Column("friendly_name", "Friendly name"),
             listing.Column("email", "Email"),
@@ -73,6 +71,16 @@ class UserListing(admin_views.Listing):
     resource_buttons = admin_views.Listing.resource_buttons + [
         TraverseLinkButton(id="csv-export", name="CSV Export", view_name="csv-export", permission="view")
     ]
+
+    def filter_query(self, query):
+        search_query = self.request.params.get("search")
+        if search_query:
+            search_like = "%{}%".format(search_query)
+            query = query.filter(or_(
+                User.email.ilike(search_like),
+                User.username.ilike(search_like),
+            ))
+        return query
 
     def order_query(self, query):
         return query.order_by(self.get_model().created_at.desc())
