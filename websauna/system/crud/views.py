@@ -167,6 +167,10 @@ class Listing(CRUDView):
         """Sort the query."""
         return query
 
+    def filter_query(self, query) -> Query:
+        """Filter the query. This can be used to modify the search query."""
+        return query
+
     def get_title(self) -> str:
         """Get the user-readable name of the listing view (breadcrumbs, etc.)"""
         return "All {}".format(self.get_crud().plural_name)
@@ -199,7 +203,9 @@ class Listing(CRUDView):
                 raise RuntimeError("header_template missing for column: {}".format(c))
 
         query = self.get_query()
+        query = self.filter_query(query)
         query = self.order_query(query)
+
         base_template = self.base_template
 
         # This is to support breadcrums with titled views

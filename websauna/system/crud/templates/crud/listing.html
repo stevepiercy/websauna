@@ -12,7 +12,10 @@
     {% block controls %}
         {# Top control bar with buttons #}
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-6">
+                {% include "crud/search.html" %}
+            </div>
+            <div class="col-md-6 pull-right">
                {% include "crud/resource_controls.html" %}
             </div>
         </div>
