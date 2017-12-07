@@ -2,6 +2,7 @@
 import logging
 import os
 import threading
+import time
 
 from pyramid.events import subscriber, NewRequest
 from redis import StrictRedis
@@ -16,6 +17,61 @@ from websauna.compat.typing import Union
 
 
 logger = logging.getLogger(__name__)
+
+
+class PessimisticConnectionPool(ConnectionPool):
+    """
+    I am pretty sure he's dead, Jim
+    """
+
+    def get_connection(self, command_name, *keys, **options):
+        "Get a connection from the pool"
+        self._checkpid()
+        try:
+            while:
+                connection = self._available_connections.pop()
+                last_time = getattr(connection, 'last_checked', 0)
+                if last_time + 180 < time.time():
+                    try:
+                        connection.ping()
+                        connection.last_checked = time.time()
+                        break
+                    except:
+                        logger.exception()
+                        connection.disconnect()
+
+        except IndexError:
+            connection = self.make_connection()
+
+        self._in_use_connections.add(connection)
+        return connection
+
+
+class PessimisticStrictRedis(StrictRedis):
+    """
+    Redo the command exactly once upon socket failure.
+    """
+
+    # COMMAND EXECUTION AND PROTOCOL PARSING
+    def execute_command(self, *args, **options):
+        "Execute a command and return a parsed response"
+        pool = self.connection_pool
+        command_name = args[0]
+        connection = pool.get_connection(command_name, **options)
+        try:
+            connection.send_command(*args)
+            return self.parse_response(connection, command_name, **options)
+        # ADD socket.error here so that socket errors are retried
+        except (ConnectionError, TimeoutError, socket.error) as e:
+            connection.disconnect()
+            if not connection.retry_on_timeout and isinstance(e, TimeoutError):
+                raise
+
+            logger.exception('Redis connection failed, attempting autorecovery')
+            connection.send_command(*args)
+            return self.parse_response(connection, command_name, **options)
+        finally:
+            pool.release(connection)
 
 
 def create_redis(registry: Registry, connection_url=None, redis_client=StrictRedis, max_connections=16, **redis_options) -> StrictRedis:
@@ -50,8 +106,8 @@ def create_redis(registry: Registry, connection_url=None, redis_client=StrictRed
 
         logger.info("Creating a new Redis connection pool. Process %s, thread %s, max_connections %d", process_name, thread_name, max_connections)
 
-        connection_pool = ConnectionPool.from_url(url, max_connections=max_connections, **redis_options)
-        redis = StrictRedis(connection_pool=connection_pool)
+        connection_pool = PessimisticConnectionPool.from_url(url, max_connections=max_connections, **redis_options)
+        redis = PessimisticStrictRedis(connection_pool=connection_pool)
     else:
         raise RuntimeError("Redis connection options missing. Please configure redis.sessions.url")
 
