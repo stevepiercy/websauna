@@ -28,7 +28,7 @@ class PessimisticConnectionPool(ConnectionPool):
         "Get a connection from the pool"
         self._checkpid()
         try:
-            while:
+            while True:
                 connection = self._available_connections.pop()
                 last_time = getattr(connection, 'last_checked', 0)
                 if last_time + 180 < time.time():
