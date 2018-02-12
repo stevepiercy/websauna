@@ -19,7 +19,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 setup(
     name='websauna',
     namespace_packages=["websauna"],
-    version='1.0a8.dev0',
+    version='1.0b1.dev0',
     description=long_description.split("\n")[0],
     long_description=long_description,
     url='https://websauna.org',
@@ -47,42 +47,9 @@ setup(
     zip_safe=False,
     python_requires='>=3.5.2,<3.7',
     install_requires=[
-        # Pyramid dependencies
-        'pyramid>=1.9',
-        'waitress',
-        'pyramid_redis_sessions',
-        'pyramid-layout',
-        "deform>=2.0.4",
-        "pyramid_debugtoolbar",
-        "pyramid_jinja2",
-
-        # Time handling
-        "arrow",
-        "pytz",
-
-        # SQLAlchemy and database support
-        "alembic",
-        "colanderalchemy",
-        "psycopg2",
-        "pyramid_retry",
-        "pyramid_tm",
-        "sqlalchemy",
-        "sqlalchemy-utils",
-        "zope.sqlalchemy",
-
-        # User management
-        "argon2_cffi",
-        "authomatic",
-
-        # Email
-        'pyramid-mailer',
-        'premailer',
-
-        # Console logging
-        "rainbow_logging_handler",
-
-        # Misc
-        "python-slugify",  # ASCII slug generation
+        # Websauna packages
+        'websauna.system',
+        'websauna.utils',
     ],
 
     extras_require={
@@ -98,19 +65,7 @@ setup(
             'zest.releaser[recommended]'
         ],
         'test': [
-            'cookiecutter',
-            'codecov',
-            'flake8',
-            'pytest>=3.0',
-            'pytest-runner',
-            'coverage',
-            'flaky',
-            'isort',
-            'pytest-cov',
-            'pytest-runner',
-            'pytest-splinter',
-            'pytest-timeout',
-            'webtest',
+            'websauna.tests',
         ],
         "notebook": [
             "ipython[notebook]<5.2",
@@ -128,36 +83,5 @@ setup(
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
-        'console_scripts': [
-            'ws-sync-db=websauna.system.devop.scripts.syncdb:main',
-            'ws-db-shell=websauna.system.devop.scripts.dbshell:main',
-            'ws-shell=websauna.system.devop.scripts.shell:main',
-            'ws-tweens=websauna.system.devop.scripts.tweens:main',
-            'ws-alembic=websauna.system.devop.scripts.alembic:main',
-            'ws-dump-db=websauna.system.devop.scripts.dumpdb:main',
-            'ws-create-user=websauna.system.devop.scripts.createuser:main',
-            'ws-celery=websauna.system.task.celeryloader:main',
-            'ws-proutes=websauna.system.devop.scripts.proutes:main',
-            'ws-pserve=websauna.system.devop.scripts.pserve:main',
-            'ws-create-table=websauna.system.devop.scripts.createtable:main',
-            'ws-sanity-check=websauna.system.devop.scripts.sanitycheck:main',
-            'ws-collect-static=websauna.system.devop.scripts.collectstatic:main',
-            'ws-settings=websauna.system.devop.scripts.settings:main',
-        ],
-
-        'paste.app_factory': [
-            'main=websauna.system:main',
-            # Scheduler automated test suite entry point with some extra configured taskss
-            'task_test=websauna.tests.demotasks:main',
-            'tutorial_test=websauna.tests.tutorial:main',
-        ],
-
-        'plaster.loader_factory': [
-            'ws=websauna.utils.config.loader:Loader',
-        ],
-
-        'plaster.wsgi_loader_factory': [
-            'ws=websauna.utils.config.loader:Loader',
-        ],
     },
 )

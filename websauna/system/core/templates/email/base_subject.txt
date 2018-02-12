@@ -1,2 +1,0 @@
-{# Plain text email subject #}
-[{{ site_name }}] {% block subject %}{% endblock %}

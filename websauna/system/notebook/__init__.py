@@ -1,1 +1,0 @@
-"""IPython Notebook integration."""
