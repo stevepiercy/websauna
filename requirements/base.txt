@@ -1,0 +1,3 @@
+git+https://github.com/websauna/websauna.utils.git@43b6ca4aecf14e7f9bceb223cacaeb0ad9e60f96#egg=websauna.utils
+git+https://github.com/websauna/websauna.system.git@9435c75fb629717c6f300d79a22ac099e7708fb2#egg=websauna.system
+git+https://github.com/websauna/websauna.tests.git@892bd8f7a32826cc0d31e97c01d721c39e787bfa#egg=websauna.tests
