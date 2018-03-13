@@ -25,7 +25,7 @@ import sphinx_rtd_theme
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 # sys.path.insert(0, os.path.abspath('.'))
 
-_release = pkg_resources.get_distribution("websauna").version
+_release = pkg_resources.get_distribution("websauna.system").version
 _version = _release.split('.')
 
 major_version = _version[0]
