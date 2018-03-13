@@ -58,7 +58,7 @@ setup(
             'setuptools_git',
             'pyroma==2.2',  # This is needed until version 2.4 of Pyroma is released
             'sphinx>=1.6.1',
-            'sphinx-autodoc-typehints',
+            'sphinx-autodoc-typehints==1.2.3',
             'sphinx_rtd_theme',
             'sphinxcontrib-zopeext',
             'zest.releaser[recommended]'
