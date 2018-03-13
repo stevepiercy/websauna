@@ -1,9 +1,4 @@
 language: python
-dist: trusty
-
-services:
-  - postgresql
-  - redis-server
 
 matrix:
     fast_finish: true

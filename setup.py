@@ -3,7 +3,6 @@ import sys
 from codecs import open
 from os import path
 
-from setuptools import find_packages
 from setuptools import setup
 
 
@@ -18,7 +17,6 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='websauna',
-    namespace_packages=["websauna"],
     version='1.0b1.dev0',
     description=long_description.split("\n")[0],
     long_description=long_description,
@@ -42,7 +40,7 @@ setup(
         'Topic :: Software Development :: Libraries :: Application Frameworks',
     ],
     keywords='sqlalchemy postgresql pyramid pytest websauna',
-    packages=find_packages(exclude=['docs']),
+    packages=[],
     include_package_data=True,
     zip_safe=False,
     python_requires='>=3.5.2,<3.7',
@@ -55,6 +53,7 @@ setup(
     extras_require={
         # Dependencies needed to build and release Websauna
         'dev': [
+            'cookiecutter',
             'ruamel.yaml',
             'setuptools_git',
             'pyroma==2.2',  # This is needed until version 2.4 of Pyroma is released

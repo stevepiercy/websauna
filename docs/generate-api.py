@@ -1,19 +1,24 @@
-"""Create nice API table of contents."""
+"""Create Sphinx API Doc for all packages."""
 
 # Standard Library
+import subprocess
 import pkgutil
-import sys
 
 # Pyramid
 import jinja2
 
 # Websauna
-import websauna.system
-import websauna.tests
-import websauna.utils
+import websauna.system  # noQA
+import websauna.tests  # noQA
+import websauna.utils  # noQA
+
+CMD_TEMPLATE = 'sphinx-apidoc -f -o {output_path} --separate --module-first {module_path}'
+output_path = 'source/api/'
+index_path = '{output_path}/index.rst'.format(output_path=output_path)
+module_path = '{output_path}/websauna.rst'.format(output_path=output_path)
 
 
-TEMPLATE = """
+INDEX_TEMPLATE = """
 .. raw:: html
 
     <style>
@@ -100,15 +105,32 @@ Testing
 {% endfor %}
 """
 
+MODULE_TEMPLATE = """websauna package
+================
 
-template = jinja2.Template(TEMPLATE)
+.. automodule:: websauna
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+
+    websauna.system
+    websauna.tests
+    websauna.utils
+
+"""
+
+template = jinja2.Template(INDEX_TEMPLATE)
 
 
 # http://stackoverflow.com/a/15723105/315168
 def get_submodules(mod):
     modules = []
     for loader, module_name, is_pkg in pkgutil.iter_modules(mod.__path__):
-
         if module_name.startswith("test_"):
             continue
 
@@ -122,16 +144,32 @@ def get_submodules(mod):
         try:
             intro = mod.__doc__.split("\n")[0]
         except Exception as exc:
-            sys.exit("Module missing a docstring: {mod}".format(mod=mod))
+            print("Module missing a docstring: {mod}".format(mod=mod))
+
         results.append((mod.__name__, intro))
     return results
 
 
-modules = {
-    'core': get_submodules(websauna.system),
-    'utils': get_submodules(websauna.utils),
-    'testing': get_submodules(websauna.tests)
-}
+def generate_apidoc(mod):
+    module_name = mod.__package__
+    module_path = '../../{module_name}/websauna'.format(module_name=module_name)
+    cmd = CMD_TEMPLATE.format(output_path=output_path, module_path=module_path)
+    subprocess.run(cmd, shell=True, check=True)
 
 
-print(template.render(dict(modules=modules)))
+modules = (
+    ('core', websauna.system),
+    ('utils', websauna.utils),
+    ('testing', websauna.tests),
+)
+
+all_modules = {}
+for name, mod in modules:
+    generate_apidoc(mod)
+    all_modules[name] = get_submodules(mod)
+
+with open(index_path, 'w') as fout:
+    fout.write(template.render(dict(modules=all_modules)))
+
+with open(module_path, 'w') as fout:
+    fout.write(MODULE_TEMPLATE)

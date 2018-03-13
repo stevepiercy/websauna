@@ -193,8 +193,13 @@ pseudoxml:
 	@echo
 	@echo "Build finished. The pseudo-XML files are in $(BUILDDIR)/pseudoxml."
 
+system-conf:
+	rm -rf ../websauna
+	mkdir -p ../websauna
+	ln -s ../../websauna.system/websauna/system/conf ../websauna/conf
+
 apidoc-clean:
-	rm -rf source/api/websauna.*
+	rm -rf source/api/*
 
 templatedoc:
 	python generate-template-desc.py > source/reference/templates.rst
@@ -206,8 +211,7 @@ playbookdoc:
 	python generate-playbook.py > source/reference/playbook.rst
 
 apidoc:
-	sphinx-apidoc -f -o source/api/ --separate --module-first ../websauna
-	python generate-api-toc.py > source/api/index.rst
+	python generate-api.py
 
 publish:
 	aws s3 sync build/html s3://websauna.org/docs
@@ -218,6 +222,6 @@ publish-epub: epub
 sitemap: html
 	python generate-sitemap.py > build/html/sitemap.xml
 
-all: apidoc-clean clean templatedoc filterdoc playbookdoc apidoc html sitemap
+all: system-conf apidoc-clean clean templatedoc filterdoc playbookdoc apidoc html sitemap
 
 world: all publish publish-epub
