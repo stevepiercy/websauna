@@ -15,11 +15,10 @@ from sqlalchemy import String
 from sqlalchemy import inspection
 from sqlalchemy.ext.indexable import index_property
 from sqlalchemy.orm.session import Session
+from sqlalchemy.dialects.postgresql import JSONB
 
 # Websauna
-# from sqlalchemy.dialects.postgresql import JSONB
 from websauna.system.model.columns import INET
-from websauna.system.model.columns import JSONB
 from websauna.system.model.columns import UUID
 from websauna.system.model.columns import UTCDateTime
 from websauna.system.model.json import NestedMutationDict
