@@ -163,7 +163,7 @@ def friendly_time(jinja_ctx, context, **kw):
     # Make relative time between two timestamps
     now = now.astimezone(tz)
     arrow = Arrow.fromdatetime(now)
-    other = Arrow.fromdatetime(datetime.datetime.utcnow())
+    other = Arrow.fromdatetime(datetime.datetime.now())
     return arrow.humanize(other)
 
 
